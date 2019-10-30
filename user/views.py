@@ -18,7 +18,7 @@ class SignUpView(View):
                 encoded_password = input_data['password'].encode('utf-8')
                 hashed_password = bcrypt.hashpw(encoded_password, bcrypt.gensalt())
                 #DB에 저장
-                Users(
+                User(
                     email = input_data['email'],
                     password = hashed_password.decode('utf-8'), #CharField이기 때문에 unicode로
                     nickname = input_data['nickname'],
