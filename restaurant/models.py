@@ -63,6 +63,7 @@ class Restaurants_Categories(models.Model):
 
 class Menus(models.Model):
     restaurant          = models.ForeignKey(Restaurants, on_delete=models.SET_NULL, null=True)
+    menu_category       = models.ForeignKey(MenuCategories, on_delete=models.SET_NULL, null=True)
     name                = models.CharField(max_length=100)
     description         = models.CharField(max_length=500)
     price               = models.DecimalField(max_digits=9, decimal_places=2)
@@ -71,3 +72,10 @@ class Menus(models.Model):
 
     class Meta:
         db_table="menus"
+
+class MenuCategories(models.Model):
+    restaurant          = models.ForeignKey(Restaurants, on_delete=models.SET_NULL, null=True)
+    name                = models.CharField(max_length=100)
+
+    class Meta:
+        db_table="menucategories"
