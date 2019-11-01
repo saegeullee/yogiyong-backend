@@ -34,7 +34,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'user',
-    'order',
+    'restaurant',
 ]
 
 MIDDLEWARE = [
