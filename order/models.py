@@ -1,9 +1,8 @@
 from django.db import models
+from user.models import User
 
-class Orders(models.Model):
-    user=models.ForeignKey(
-        'user.Users',
-        on_delete=models.CASCADE,
-    )
+class Order(models.Model):
+    user=models.ForeignKey(User, on_delete=models.CASCADE)
 
-	
+    class Meta:
+        db_table='orders'
