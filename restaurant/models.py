@@ -11,7 +11,7 @@ class Restaurants(models.Model):
     free_delivery_threshold     = models.DecimalField(max_digits=7, decimal_places=2, null=True)
     delivery_fee_explanation    = models.CharField(max_length=200, null=True)
     threshold                   = models.DecimalField(max_digits=7, decimal_places=2, null=True)
-    logo_url                    = models.CharField(max_length=4000, null=True)
+    logo_url                    = models.URLField(max_length=4000, null=True)
     estimated_delivery_time     = models.CharField(max_length=20, null=True)
     city                        = models.CharField(max_length=20)
     review_count                = models.IntegerField(null=True)
@@ -75,7 +75,7 @@ class Menus(models.Model):
     description         = models.CharField(max_length=500)
     price               = models.DecimalField(max_digits=9, decimal_places=2)
     quantity            = models.IntegerField()
-    image               = models.CharField(max_length=4000, null=True)
+    image               = models.URLField(max_length=4000, null=True)
 
     class Meta:
         db_table="menus"

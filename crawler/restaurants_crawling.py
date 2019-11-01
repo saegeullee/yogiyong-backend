@@ -21,46 +21,44 @@ def getMenuUrl(restaurant_id):
 headers = {'x-apikey': 'iphoneap', 'x-apisecret': 'fe5183cc3dea12bd0ce299cf110a75a2'}
 
 def saveAllRestaurantsAppModelsData(categories):
-    for category_idx in range(len(categories)):
-        req = requests.get(getCategoryUrl(categories[category_idx]), headers=headers) 
+    for category in categories:
+        req = requests.get(getCategoryUrl(category), headers=headers) 
 
         restaurants_obj = req.json()["restaurants"]
 
-        for rest_idx in range(len(restaurants_obj)):
-
-            obj = restaurants_obj[rest_idx]
+        for rest_obj in restaurants_obj:
 
             restaurant = Restaurants(
-                name = obj["name"],
-                address = obj["address"],
-                phone = obj["phone"],
-                lat = obj["lat"],
-                lng = obj["lng"],
-                phone_order = obj["phone_order"],
-                free_delivery_threshold = obj["free_delivery_threshold"],
-                delivery_fee_explanation = obj["delivery_fee_explanation"],
-                threshold = obj["threshold"],
-                logo_url = obj["logo_url"],
-                estimated_delivery_time = obj["estimated_delivery_time"],
-                city = obj["city"],
-                review_count = obj["review_count"],
-                open_time_description = obj["open_time_description"],
-                additional_discount = obj["additional_discount"],
-                review_image_count = obj["review_image_count"],
-                is_available_pickup = obj["is_available_pickup"],
-                delivery_fee = obj["delivery_fee"],
-                review_avg = obj["review_avg"],
-                one_dish = obj["one_dish"]
+                name = rest_obj["name"],
+                address = rest_obj["address"],
+                phone = rest_obj["phone"],
+                lat = rest_obj["lat"],
+                lng = rest_obj["lng"],
+                phone_order = rest_obj["phone_order"],
+                free_delivery_threshold = rest_obj["free_delivery_threshold"],
+                delivery_fee_explanation = rest_obj["delivery_fee_explanation"],
+                threshold = rest_obj["threshold"],
+                logo_url = rest_obj["logo_url"],
+                estimated_delivery_time = rest_obj["estimated_delivery_time"],
+                city = rest_obj["city"],
+                review_count = rest_obj["review_count"],
+                open_time_description = rest_obj["open_time_description"],
+                additional_discount = rest_obj["additional_discount"],
+                review_image_count = rest_obj["review_image_count"],
+                is_available_pickup = rest_obj["is_available_pickup"],
+                delivery_fee = rest_obj["delivery_fee"],
+                review_avg = rest_obj["review_avg"],
+                one_dish = rest_obj["one_dish"]
             )
 
             restaurant.save()
-            print(obj["name"] + "restaurants saved")
+            print(rest_obj["name"] + "restaurants saved")
 
-            categories_obj = obj["categories"]
-            for cat_idx in range(len(categories_obj)): 
-                
+            categories_obj = rest_obj["categories"]
+            
+            for cat_obj in categories_obj: 
                 try:
-                    category = Categories.objects.get(name=categories_obj[cat_idx])
+                    category = Categories.objects.get(name=cat_obj)
                     Restaurants_Categories(
                         category = category,
                         restaurant = restaurant
@@ -69,26 +67,29 @@ def saveAllRestaurantsAppModelsData(categories):
                     pass
             print("category saved")
 
-            tags_obj = obj["tags"]
-            for tag_idx in range(len(tags_obj)):
+            tags_obj = rest_obj["tags"]
+            for tag_obj in tags_obj:
                 
-                tag = Tags.objects.get(name=tags_obj[tag_idx])
+                tag = Tags.objects.get(name=tag_obj)
                 Restaurants_Tags(
                     tag = tag,
                     restaurant = restaurant
                 ).save()
             print("tags saved")
 
-            payment_methods_obj = obj["payment_methods"]
-            for payment_idx in range(len(payment_methods_obj)):
+            payment_methods_obj = rest_obj["payment_methods"]
 
+            payment_object = [
                 PaymentMethods(
                     restaurant = restaurant,
-                    name = payment_methods_obj[payment_idx]
-                ).save()
+                    name = payment_method)
+                for payment_method in payment_methods_obj
+            ]
+            PaymentMethods.objects.bulk_create(payment_object)
+
             print("payment_method saved")
-            saveAllRestaurantsMenus(obj["id"], restaurant)
-        print(categories[category_idx] + "category saved")
+            saveAllRestaurantsMenus(rest_obj["id"], restaurant)
+        print(category + " category saved")
                 
 
 def saveAllRestaurantsMenus(restaurant_id, restaurant):
