@@ -21,14 +21,14 @@ def getMenuUrl(restaurant_id):
 headers = {'x-apikey': 'iphoneap', 'x-apisecret': 'fe5183cc3dea12bd0ce299cf110a75a2'}
 
 def saveAllRestaurantsAppModelsData(categories):
-    for i in range(len(categories)):
-        req = requests.get(getCategoryUrl(categories[i]), headers=headers) 
+    for category_idx in range(len(categories)):
+        req = requests.get(getCategoryUrl(categories[category_idx]), headers=headers) 
 
         restaurants_obj = req.json()["restaurants"]
 
-        for j in range(len(restaurants_obj)):
+        for rest_idx in range(len(restaurants_obj)):
 
-            obj = restaurants_obj[j]
+            obj = restaurants_obj[rest_idx]
 
             restaurant = Restaurants(
                 name = obj["name"],
@@ -88,7 +88,7 @@ def saveAllRestaurantsAppModelsData(categories):
                 ).save()
             print("payment_method saved")
             saveAllRestaurantsMenus(obj["id"], restaurant)
-        print(categories[i] + "category saved")
+        print(categories[category_idx] + "category saved")
                 
 
 def saveAllRestaurantsMenus(restaurant_id, restaurant):
@@ -96,25 +96,22 @@ def saveAllRestaurantsMenus(restaurant_id, restaurant):
 
     menuTotalListLength = len(req.json())
 
-    for i in range(menuTotalListLength):
+    for menu_cat_idx in range(menuTotalListLength):
 
-        menuCategoryLength = len(req.json()[i]['items'])
+        menuCategoryLength = len(req.json()[menu_cat_idx]['items'])
 
-        menu_category_name = req.json()[i]['name']
+        menu_category_name = req.json()[menu_cat_idx]['name']
         menu_category = MenuCategories(
             restaurant = restaurant,
             name = menu_category_name
         )
 
         menu_category.save()
-        print("menu categoriy saved")
-        # print("=========================")
-        # print(menu_category_name)
-        # print("=========================")
+        print("menu category saved")
 
-        for j in range(menuCategoryLength):
+        for menu_idx in range(menuCategoryLength):
 
-            menu = req.json()[i]['items'][j]
+            menu = req.json()[menu_cat_idx]['items'][menu_idx]
 
             try:
                 image = menu['image']
@@ -131,9 +128,6 @@ def saveAllRestaurantsMenus(restaurant_id, restaurant):
                 image = image
             ).save()
         print(menu_category_name + "menus saved")
-        #     print(req.json()[i]['items'][j])
-        #     print("\n")
-        # print("\n\n\n")
     print("All menus in the category saved")
 
 
