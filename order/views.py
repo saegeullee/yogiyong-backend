@@ -73,7 +73,7 @@ class OrderView(View):
             
         except jwt.ExpiredSignatureError:
             
-            return JsonResponse({'message':'INVALID_USER'}, status=401)
+            return JsonResponse({'message':'EXPIRED_TOKEN'}, status=401)
             
         except jwt.InvalidIssuerError:
 
