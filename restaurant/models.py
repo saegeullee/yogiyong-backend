@@ -20,9 +20,12 @@ class Restaurants(models.Model):
     review_image_count          = models.IntegerField(null=True)
     is_available_pickup         = models.BooleanField(null=True)
     delivery_fee                = models.DecimalField(max_digits=6, decimal_places=2, null=True)
-    review_avg                  = models.IntegerField(null=True)
+    review_avg                  = models.DecimalField(max_digits=2, decimal_places=1, null=True)
     one_dish                    = models.BooleanField(null=True)
-
+    ingredients_origin          = models.TextField(null=True)
+    company_name                = models.CharField(max_length=100, null=True)
+    company_number              = models.CharField(max_length=50, null=True)
+    
     class Meta:
         db_table = "restaurants"
 

@@ -7,11 +7,15 @@ django.setup()
 
 from restaurant.models import Restaurants, Tags, PaymentMethods, Categories, Menus, MenuCategories, Restaurants_Categories, Restaurants_Tags
 
-categories = ["1인분 주문", "프랜차이즈", "치킨", "피자/양식", "중국집", "한식", "일식/돈까스", "족발/보쌈", "야식",
-            "분식", "카페/디저트", "편의점"]
+categories = ["1인분주문", "프랜차이즈", "치킨", "피자양식", "중식", "한식", "일식돈까스", "족발보쌈", "야식",
+            "분식", "카페디저트", "편의점"]
 
 def getCategoryUrl(categoryName):
     url = f"https://www.yogiyo.co.kr/api/v1/restaurants-geo/?category={categoryName}&items=20&lat=37.5342877292787&lng=126.965315612204&order=rank&page=0&search="
+    return url
+
+def getRestaurantInfoUrl(restaurant_id):
+    url = f"https://www.yogiyo.co.kr/api/v1/restaurants/{restaurant_id}/info/"
     return url
 
 def getMenuUrl(restaurant_id):
@@ -22,11 +26,13 @@ headers = {'x-apikey': 'iphoneap', 'x-apisecret': 'fe5183cc3dea12bd0ce299cf110a7
 
 def saveAllRestaurantsAppModelsData(categories):
     for category in categories:
-        req = requests.get(getCategoryUrl(category), headers=headers) 
-
+        req = requests.get(getCategoryUrl(category), headers=headers)
         restaurants_obj = req.json()["restaurants"]
 
         for rest_obj in restaurants_obj:
+
+            info_req = requests.get(getRestaurantInfoUrl(rest_obj["id"]), headers=headers)
+            info_obj = info_req.json()
 
             restaurant = Restaurants(
                 name = rest_obj["name"],
@@ -48,7 +54,10 @@ def saveAllRestaurantsAppModelsData(categories):
                 is_available_pickup = rest_obj["is_available_pickup"],
                 delivery_fee = rest_obj["delivery_fee"],
                 review_avg = rest_obj["review_avg"],
-                one_dish = rest_obj["one_dish"]
+                one_dish = rest_obj["one_dish"],
+                ingredients_origin = info_obj["country_origin"],
+                company_name = info_obj["crmdata"]["company_name"],
+                company_number = info_obj["crmdata"]["company_number"]
             )
 
             restaurant.save()
@@ -89,7 +98,7 @@ def saveAllRestaurantsAppModelsData(categories):
 
             print("payment_method saved")
             saveAllRestaurantsMenus(rest_obj["id"], restaurant)
-        print(category + " category saved")
+    print("CATEGORY saved")
                 
 
 def saveAllRestaurantsMenus(restaurant_id, restaurant):
