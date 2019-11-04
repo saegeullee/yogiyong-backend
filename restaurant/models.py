@@ -7,21 +7,21 @@ class Restaurants(models.Model):
     phone                       = models.CharField(max_length=100)
     lat                         = models.DecimalField(max_digits=15, decimal_places=12)
     lng                         = models.DecimalField(max_digits=15, decimal_places=12)
-    phone_order                 = models.BooleanField(default=False)
-    free_delivery_threshold     = models.DecimalField(max_digits=7, decimal_places=2)
-    delivery_fee_explanation    = models.CharField(max_length=200)
-    threshold                   = models.DecimalField(max_digits=7, decimal_places=2)
-    logo_url                    = models.CharField(max_length=4000)
-    estimated_delivery_time     = models.CharField(max_length=20)
+    phone_order                 = models.BooleanField(default=False, null=True)
+    free_delivery_threshold     = models.DecimalField(max_digits=7, decimal_places=2, null=True)
+    delivery_fee_explanation    = models.CharField(max_length=200, null=True)
+    threshold                   = models.DecimalField(max_digits=7, decimal_places=2, null=True)
+    logo_url                    = models.CharField(max_length=4000, null=True)
+    estimated_delivery_time     = models.CharField(max_length=20, null=True)
     city                        = models.CharField(max_length=20)
-    review_count                = models.IntegerField()
+    review_count                = models.IntegerField(null=True)
     open_time_description       = models.CharField(max_length=100, null=True)
-    additional_discount         = models.IntegerField()
-    review_image_count          = models.IntegerField()
-    is_available_pickup         = models.BooleanField()
-    delivery_fee                = models.DecimalField(max_digits=6, decimal_places=2)
-    review_avg                  = models.IntegerField()
-    one_dish                    = models.BooleanField()
+    additional_discount         = models.IntegerField(null=True)
+    review_image_count          = models.IntegerField(null=True)
+    is_available_pickup         = models.BooleanField(null=True)
+    delivery_fee                = models.DecimalField(max_digits=6, decimal_places=2, null=True)
+    review_avg                  = models.IntegerField(null=True)
+    one_dish                    = models.BooleanField(null=True)
 
     class Meta:
         db_table = "restaurants"
@@ -68,7 +68,7 @@ class Menus(models.Model):
     description         = models.CharField(max_length=500)
     price               = models.DecimalField(max_digits=9, decimal_places=2)
     quantity            = models.IntegerField()
-    image               = models.CharField(max_length=4000)
+    image               = models.CharField(max_length=4000, null=True)
 
     class Meta:
         db_table="menus"

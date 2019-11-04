@@ -3,7 +3,7 @@ import json
 
 from django.http  import JsonResponse
 from django.views import View
-from datetime     import datetime
+from datetime     import datetime, timezone
 
 from user.models       import User
 from .models           import Order, JoinOrderMenu
@@ -11,21 +11,22 @@ from restaurant.models import Restaurants, Menus, PaymentMethods
 
 class OrderView(View):
     def post(self, request):
-        order_data_header = json.loads(request.header)
+        
+       # order_data_header = json.loads(request.header)
         order_data        = json.loads(request.body)
-        now_datetime      = datetime.now()
+        now_datetime      = datetime.now(timezone.utc) #DB에 저장할 때는 국제표준으로 저장
         try:
             #로그인한 유저
-            if 'Authorization' in list(order_data_header.keys()): 
-                user_token         = order_data_header['Authorization']
-                order_user_payload = jwt.decode(user_token, 'secret', algorithms=['HS256'])
-                order_user         = User.objects.get(id=order_user_payload['id'])
+            #if 'Authorization' in list(order_data_header.keys()): 
+            #    user_token         = order_data_header['Authorization']
+            #    order_user_payload = jwt.decode(user_token, 'secret', algorithms=['HS256'])
+            #    order_user         = User.objects.get(id=order_user_payload['id'])
             #비로그인 유저
-            else:
-                order_user         = None
+            #else:
+            order_user         = None
 
             order_restaurant     = Restaurants.objects.get(id=order_data['restaurant']['id'])
-            order_payment_method = PaymentMethods.objects.get(id=order_Data['payment']['id'])
+            order_payment_method = PaymentMethods.objects.get(id=order_data['payment_method']['id'])
             """
             order_menu_ids     = list()
             order_menu_amounts = list()
@@ -46,12 +47,15 @@ class OrderView(View):
                 created_at        = now_datetime,
                 ).save()
 
-            for dish in order_data['menu']:
+            menu_list = order_data['menus']
+            amount_list = order_data['amounts']
+
+            for i in range(len(menu_list)):
                 JoinOrderMenu(
-                    order  = Order.objects.latest('created_at')
-                    menu   = Menus.objects.get(id=dish['id'])
-                    amount = int(dish['amount'])
-                    ).save()
+                    order  = Order.objects.latest('created_at'),
+                    menu   = Menus.objects.get(id=menu_list[i]['id']),
+                    amount = amount_list[i],
+                ).save()
 
             return JsonResponse({'message':'SUCCESS'}, status=200)
                     
@@ -59,7 +63,7 @@ class OrderView(View):
 
             return JsonResponse({'message':'INVALID_USER'}, status=401)
             
-        except Restaurant.DoesNotExist:
+        except Restaurants.DoesNotExist:
              
             return JsonResponse({'message':'INVALID_RESTAURANT'}, status=400)
 
@@ -84,5 +88,5 @@ class OrderView(View):
             return JsonResponse({'message':'INVALID_USER'}, status=401)
 
         except KeyError:
-
-            return JsonResponse({'message':'WRONG_KEY'},status=400)
+            
+            return JsonResponse({'message':'WRONG_KEY'}, status=400)

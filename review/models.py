@@ -4,8 +4,8 @@ from restaurant.models import Restaurants, Menus
 from order.models      import Order
 
 class Review(models.Model):
-    order           = models.ForeignKey(Order, on_delete=models.CASCADE)
-    user            = models.ForeignKey(User, on_delete=models.CASCADE)
+    order           = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
+    user            = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     restaurant      = models.ForeignKey(Restaurants, on_delete=models.CASCADE)
     comment         = models.CharField(max_length=300)
     rating_taste    = models.DecimalField(max_digits=2, decimal_places=1)
@@ -13,14 +13,14 @@ class Review(models.Model):
     rating_quantity = models.DecimalField(max_digits=2, decimal_places=1)
     rating_avg      = models.DecimalField(max_digits=2, decimal_places=1)
     created_at      = models.DateTimeField(auto_now_add=True)
-    updated_at      = models.DateTimeField(auto_now=True)
+    updated_at      = models.DateTimeField(auto_now=True, null=True)
     menus           = models.ManyToManyField(Menus, through='JoinReviewMenu')
     class Meta:
         db_table = 'reviews'
 
 class ReviewImage(models.Model):
     review       = models.ForeignKey(Review, on_delete=models.CASCADE)
-    review_imgae = models.CharField(max_length=4000)
+    review_image = models.CharField(max_length=4000)
     class Meta:
         db_table = 'review_images'
 
