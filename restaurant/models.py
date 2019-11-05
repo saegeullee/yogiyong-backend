@@ -2,16 +2,16 @@ from django.db import models
 
 
 class Restaurants(models.Model): 
-    name                        = models.CharField(max_length=200)
-    address                     = models.CharField(max_length=200)
+    name                        = models.CharField(max_length=500)
+    address                     = models.CharField(max_length=500)
     phone                       = models.CharField(max_length=100)
     lat                         = models.DecimalField(max_digits=15, decimal_places=12)
     lng                         = models.DecimalField(max_digits=15, decimal_places=12)
     phone_order                 = models.BooleanField(default=False, null=True)
     free_delivery_threshold     = models.DecimalField(max_digits=7, decimal_places=2, null=True)
-    delivery_fee_explanation    = models.CharField(max_length=200, null=True)
+    delivery_fee_explanation    = models.CharField(max_length=500, null=True)
     threshold                   = models.DecimalField(max_digits=7, decimal_places=2, null=True)
-    logo_url                    = models.CharField(max_length=4000, null=True)
+    logo_url                    = models.URLField(max_length=4000, null=True)
     estimated_delivery_time     = models.CharField(max_length=20, null=True)
     city                        = models.CharField(max_length=20)
     review_count                = models.IntegerField(null=True)
@@ -20,9 +20,12 @@ class Restaurants(models.Model):
     review_image_count          = models.IntegerField(null=True)
     is_available_pickup         = models.BooleanField(null=True)
     delivery_fee                = models.DecimalField(max_digits=6, decimal_places=2, null=True)
-    review_avg                  = models.IntegerField(null=True)
+    review_avg                  = models.DecimalField(max_digits=2, decimal_places=1, null=True)
     one_dish                    = models.BooleanField(null=True)
-
+    ingredients_origin          = models.TextField(null=True)
+    company_name                = models.CharField(max_length=500, null=True)
+    company_number              = models.CharField(max_length=50, null=True)
+    
     class Meta:
         db_table = "restaurants"
 
@@ -61,21 +64,21 @@ class Restaurants_Categories(models.Model):
     class Meta:
         db_table = "restaurants_categories"
 
-class Menus(models.Model):
-    restaurant          = models.ForeignKey(Restaurants, on_delete=models.SET_NULL, null=True)
-    menu_category       = models.ForeignKey('MenuCategories', on_delete=models.SET_NULL, null=True)
-    name                = models.CharField(max_length=100)
-    description         = models.CharField(max_length=500)
-    price               = models.DecimalField(max_digits=9, decimal_places=2)
-    quantity            = models.IntegerField()
-    image               = models.CharField(max_length=4000, null=True)
-
-    class Meta:
-        db_table="menus"
-
 class MenuCategories(models.Model):
     restaurant          = models.ForeignKey(Restaurants, on_delete=models.SET_NULL, null=True)
     name                = models.CharField(max_length=100)
 
     class Meta:
         db_table="menucategories"
+
+class Menus(models.Model):
+    restaurant          = models.ForeignKey(Restaurants, on_delete=models.SET_NULL, null=True)
+    menu_category       = models.ForeignKey(MenuCategories, on_delete=models.SET_NULL, null=True)
+    name                = models.CharField(max_length=500)
+    description         = models.CharField(max_length=3000)
+    price               = models.DecimalField(max_digits=9, decimal_places=2)
+    quantity            = models.IntegerField()
+    image               = models.URLField(max_length=4000, null=True)
+
+    class Meta:
+        db_table="menus"
