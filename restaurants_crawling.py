@@ -10,8 +10,8 @@ from restaurant.models import Restaurants, Tags, PaymentMethods, Categories, Men
 categories = ["1인분주문", "프랜차이즈", "치킨", "피자양식", "중식", "한식", "일식돈까스", "족발보쌈", "야식",
             "분식", "카페디저트", "편의점"]
 
-def getCategoryUrl(categoryName):
-    url = f"https://www.yogiyo.co.kr/api/v1/restaurants-geo/?category={categoryName}&items=20&lat=37.5342877292787&lng=126.965315612204&order=rank&page=0&search="
+def getRestaurantUrl(pageNum):
+    url = f"https://www.yogiyo.co.kr/api/v1/restaurants-geo/?items=20&lat=37.5030428702997&lng=127.050691968657&order=rank&page={pageNum}&search="
     return url
 
 def getRestaurantInfoUrl(restaurant_id):
@@ -25,8 +25,8 @@ def getMenuUrl(restaurant_id):
 headers = {'x-apikey': 'iphoneap', 'x-apisecret': 'fe5183cc3dea12bd0ce299cf110a75a2'}
 
 def saveAllRestaurantsAppModelsData(categories):
-    for category in categories:
-        req = requests.get(getCategoryUrl(category), headers=headers)
+    for i in range(50):
+        req = requests.get(getRestaurantUrl(i), headers=headers)
         restaurants_obj = req.json()["restaurants"]
 
         for rest_obj in restaurants_obj:
