@@ -1,76 +1,90 @@
+import json
+
 from django.http import JsonResponse
 from django.views import View
 from .models import Restaurants, Categories, Restaurants_Categories, Tags, PaymentMethods, Menus, MenuCategories, Restaurants_Tags
-
-import json
-
 
 class HomeView(View): 
     def get(self, request): 
         categories = Categories.objects.values() 
         return JsonResponse({"categories" : list(categories)}) 
 
-class CategoryView(View): 
+class CategoryView(View):
+
     def get(self, request, category_id):
-        restaurants = Restaurants_Categories.objects.values().filter(category_id=category_id)
-        restaurants_list = []
 
-        for restaurant in restaurants:
-            restaurants_obj = {}
-            rest = Restaurants.objects.values().get(id=restaurant["restaurant_id"])
+        try:
+            order_method = request.GET.get('order_method', 'id')
 
-            restaurants_obj['id'] = rest['id']
-            restaurants_obj['name'] = rest['name']
-            restaurants_obj['address'] = rest['address']
-            restaurants_obj['phone'] = rest['phone']
-            restaurants_obj['lat'] = rest['lat']
-            restaurants_obj['lng'] = rest['lng']
-            restaurants_obj['phone_order'] = rest['phone_order']
-            restaurants_obj['free_delivery_threshold'] = rest['free_delivery_threshold']
-            restaurants_obj['delivery_fee_explanation'] = rest['delivery_fee_explanation']
-            restaurants_obj['threshold'] = rest['threshold']
-            restaurants_obj['logo_url'] = rest['logo_url']
-            restaurants_obj['estimated_delivery_time'] = rest['estimated_delivery_time']
-            restaurants_obj['city'] = rest['city']
-            restaurants_obj['review_count'] = rest['review_count']
-            restaurants_obj['open_time_description'] = rest['open_time_description']
-            restaurants_obj['additional_discount'] = rest['additional_discount']
-            restaurants_obj['review_image_count'] = rest['review_image_count']
-            restaurants_obj['is_available_pickup'] = rest['is_available_pickup']
-            restaurants_obj['delivery_fee'] = rest['delivery_fee']
-            restaurants_obj['review_avg'] = rest['review_avg']
-            restaurants_obj['one_dish'] = rest['one_dish']
-            
-            tags_list = []
-            tags = Restaurants_Tags.objects.values().filter(restaurant_id = restaurant["restaurant_id"])
-            for tag in tags:
-                tag_name = Tags.objects.values().get(id=tag['tag_id'])['name']
-                tags_list.append(tag_name)
-            
-            restaurants_obj['tags'] = tags_list
-            restaurants_list.append(restaurants_obj)
+            restaurants  = Restaurants_Categories.objects.filter(
+                category_id = category_id).order_by(
+                    f"-restaurant__{order_method}").select_related(
+                    'restaurant').prefetch_related(
+                    'restaurant__tags_set')[:1]
+
+            restaurants_list = [
+                {
+                    'id' : rest.restaurant.id,
+                    'name' : rest.restaurant.name,
+                    'address' : rest.restaurant.address,
+                    'phone' : rest.restaurant.phone,
+                    'lat' : rest.restaurant.lat,
+                    'lng' : rest.restaurant.lng,
+                    'phone_order' : rest.restaurant.phone_order,
+                    'free_delivery_threshold' : rest.restaurant.free_delivery_threshold,
+                    'delivery_fee_explanation' : rest.restaurant.delivery_fee_explanation,
+                    'threshold' : rest.restaurant.threshold,
+                    'logo_url' : rest.restaurant.logo_url,
+                    'estimated_delivery_time' : rest.restaurant.estimated_delivery_time,
+                    'city' : rest.restaurant.city,
+                    'review_count' : rest.restaurant.review_count,
+                    'open_time_description' : rest.restaurant.open_time_description,
+                    'additional_discount' : rest.restaurant.additional_discount,
+                    'review_image_count' : rest.restaurant.review_image_count,
+                    'is_available_pickup' : rest.restaurant.is_available_pickup,
+                    'delivery_fee' : rest.restaurant.delivery_fee,
+                    'review_avg' : rest.restaurant.review_avg,
+                    'one_dish' : rest.restaurant.one_dish,
+                    'ingredients_origin' : rest.restaurant.ingredients_origin,
+                    'company_name' : rest.restaurant.company_name,
+                    'company_number' : rest.restaurant.company_number,
+                    'tags' : [
+                        tag["name"] for tag in rest.restaurant.tags_set.values()
+                    ]
+                } for rest in restaurants]
+
+        except Restaurants_Categories.DoesNotExist:
+            return JsonResponse({"RESULT" : "NO_RESTAURANT_CATEGORY"})
         
-        return JsonResponse({"restaurants" : restaurants_list, "restaurants_number" : len(restaurants_list)})
+        return JsonResponse({"restaurants" : restaurants_list, "restaurants_number" : len(restaurants_list)}, status=200)
 
 class RestaurantView(View):
     def get(self, request, restaurant_id):
-        restaurant = Restaurants.objects.values().get(id=restaurant_id)
-        payment_methods = PaymentMethods.objects.values().filter(restaurant_id=restaurant_id)
-        menu_categories = MenuCategories.objects.values().filter(restaurant_id=restaurant_id)
+        try:
+            restaurant = Restaurants.objects.values().get(id=restaurant_id)
+            payment_methods = PaymentMethods.objects.values().filter(restaurant_id=restaurant_id)
+            menu_categories = MenuCategories.objects.values().filter(restaurant_id=restaurant_id)
+        except Restaurants.DoesNotExist:
+            return JsonResponse({"RESULT" : "NO_RESTAURANT"})
+        except PaymentMethods.DoesNotExist:
+            return JsonResponse({"RESULT" : "NO_PAYMENTMETHOD"})
+        except MenuCategories.DoesNotExist:
+            return JsonResponse({"RESULT" : "NO_MENUCATEGORY"})
 
         paymentmethods = []
         for payment_method in payment_methods:
             paymentmethods.append(payment_method["name"])
 
-        menus = {}
-        for menu_category in menu_categories:
-            menu_items = []
-            menuItems = Menus.objects.values().filter(menu_category_id=menu_category['id'])
-            for menuItem in menuItems:
-                menu_items.append(menuItem)
-            menus[menu_category["name"]] = menu_items
+        all_menus = [
+            {
+                "title" : menu_category["name"],
+                "menus" : [
+                    menuItem 
+                    for menuItem in Menus.objects.values().filter(menu_category_id=menu_category['id'])]
+            }
+            for menu_category in menu_categories]
 
-        return JsonResponse({"restaurant" : restaurant, "menus" : menus, "payment_methods" : paymentmethods})
+        return JsonResponse({"restaurant" : restaurant, "all_menus" : all_menus, "payment_methods" : paymentmethods})
         
 
          
