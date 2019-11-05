@@ -20,7 +20,7 @@ class CategoryView(View):
                 category_id = category_id).order_by(
                     f"-restaurant__{order_method}").select_related(
                     'restaurant').prefetch_related(
-                    'restaurant__tags_set')[:1]
+                    'restaurant__tags_set')
 
             restaurants_list = [
                 {
