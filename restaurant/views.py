@@ -15,12 +15,13 @@ class CategoryView(View):
 
         try:
             order_method = request.GET.get('order_method', 'id')
+            pageNum = request.GET.get('pageNum', 0)
 
             restaurants  = Restaurants_Categories.objects.filter(
                 category_id = category_id).order_by(
                     f"-restaurant__{order_method}").select_related(
                     'restaurant').prefetch_related(
-                    'restaurant__tags_set')
+                    'restaurant__tags_set')[0 + (int(pageNum) * 20) : ((int(pageNum) + 1)) * 20]
 
             restaurants_list = [
                 {
@@ -53,8 +54,12 @@ class CategoryView(View):
                     ]
                 } for rest in restaurants]
 
+
+            if len(restaurants_list) == 0 :
+                return JsonResponse({"RESULT" : "NO_MORE_PAGE"}, status=200)
+
         except Restaurants_Categories.DoesNotExist:
-            return JsonResponse({"RESULT" : "NO_RESTAURANT_CATEGORY"})
+            return JsonResponse({"RESULT" : "NO_RESTAURANT_CATEGORY"}, status=400)
         
         return JsonResponse({"restaurants" : restaurants_list, "restaurants_number" : len(restaurants_list)}, status=200)
 
@@ -65,11 +70,11 @@ class RestaurantView(View):
             payment_methods = PaymentMethods.objects.values().filter(restaurant_id=restaurant_id)
             menu_categories = MenuCategories.objects.values().filter(restaurant_id=restaurant_id)
         except Restaurants.DoesNotExist:
-            return JsonResponse({"RESULT" : "NO_RESTAURANT"})
+            return JsonResponse({"RESULT" : "NO_RESTAURANT"}, status=400)
         except PaymentMethods.DoesNotExist:
-            return JsonResponse({"RESULT" : "NO_PAYMENTMETHOD"})
+            return JsonResponse({"RESULT" : "NO_PAYMENTMETHOD"}, status=400)
         except MenuCategories.DoesNotExist:
-            return JsonResponse({"RESULT" : "NO_MENUCATEGORY"})
+            return JsonResponse({"RESULT" : "NO_MENUCATEGORY"}, status=400)
 
         paymentmethods = []
         for payment_method in payment_methods:
@@ -84,7 +89,7 @@ class RestaurantView(View):
             }
             for menu_category in menu_categories]
 
-        return JsonResponse({"restaurant" : restaurant, "all_menus" : all_menus, "payment_methods" : paymentmethods})
+        return JsonResponse({"restaurant" : restaurant, "all_menus" : all_menus, "payment_methods" : paymentmethods}, status=200)
         
 
          
