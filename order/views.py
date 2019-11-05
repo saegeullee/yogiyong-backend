@@ -8,34 +8,18 @@ from datetime     import datetime, timezone
 from user.models       import User
 from .models           import Order, JoinOrderMenu
 from restaurant.models import Restaurants, Menus, PaymentMethods
+from utils             import OrderLoginConfirm
 
 class OrderView(View):
+    @OrderLoginConfirm
     def post(self, request):
-        
-       # order_data_header = json.loads(request.header)
-        order_data        = json.loads(request.body)
-        now_datetime      = datetime.now(timezone.utc) #DB에 저장할 때는 국제표준으로 저장
         try:
-            #로그인한 유저
-            #if 'Authorization' in list(order_data_header.keys()): 
-            #    user_token         = order_data_header['Authorization']
-            #    order_user_payload = jwt.decode(user_token, 'secret', algorithms=['HS256'])
-            #    order_user         = User.objects.get(id=order_user_payload['id'])
-            #비로그인 유저
-            #else:
-            order_user         = None
-
+            order_data           = json.loads(request.body)
+            now_datetime         = datetime.now(timezone.utc) #DB에 저장할 때는 국제표준으로 저장
+            order_user           = request.user
             order_restaurant     = Restaurants.objects.get(id=order_data['restaurant']['id'])
             order_payment_method = PaymentMethods.objects.get(id=order_data['payment_method']['id'])
-            """
-            order_menu_ids     = list()
-            order_menu_amounts = list()
-            
-            for dish in order_data['menu']:
-                order_menu_ids.append(dish['id'])
-                order_menu_amounts.append(dish['amount'])
-            #여러개의 메뉴의 아이디와 양을 정리한 리스트
-            """ 
+           
             Order(
                 user              = order_user,
                 user_phone_number = order_data['user_phone_number'],
@@ -47,46 +31,28 @@ class OrderView(View):
                 created_at        = now_datetime,
                 ).save()
 
-            menu_list = order_data['menus']
+            menu_list   = order_data['menus']
             amount_list = order_data['amounts']
-
+            
+            join_order_menu =[]
             for i in range(len(menu_list)):
-                JoinOrderMenu(
-                    order  = Order.objects.latest('created_at'),
-                    menu   = Menus.objects.get(id=menu_list[i]['id']),
-                    amount = amount_list[i],
-                ).save()
+                join_order_menu.append(JoinOrderMenu(
+                                                order  = Order.objects.latest('created_at'),
+                                                menu   = Menus.objects.get(id=menu_list[i]['id']),
+                                                amount = amount_list[i],
+                                                ))
+            JoinOrderMenu.objects.bulk_create(join_order_menu)
 
             return JsonResponse({'message':'SUCCESS'}, status=200)
                     
-        except User.DoesNotExist:
-
-            return JsonResponse({'message':'INVALID_USER'}, status=401)
-            
         except Restaurants.DoesNotExist:
-             
             return JsonResponse({'message':'INVALID_RESTAURANT'}, status=400)
 
         except Menus.DoesNotExist:
-                
             return JsonResponse({'message':'INVALID_MENU'}, status=400)
 
         except PaymentMethods.DoesNotExist:
-
             return JsonResponse({'message':'INVALID_PAYMENT_METHOD'}, status=400)
             
-        except jwt.ExpiredSignatureError:
-            
-            return JsonResponse({'message':'EXPIRED_TOKEN'}, status=401)
-            
-        except jwt.InvalidIssuerError:
-
-            return JsonResponse({'message':'INVALID_USER'}, status=401)
-
-        except jwt.DecodeError:
-            
-            return JsonResponse({'message':'INVALID_USER'}, status=401)
-
         except KeyError:
-            
             return JsonResponse({'message':'WRONG_KEY'}, status=400)

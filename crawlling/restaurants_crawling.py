@@ -88,7 +88,7 @@ def saveAllRestaurantsAppModelsData(categories):
 
             print("payment_method saved")
             saveAllRestaurantsMenus(rest_obj["id"], restaurant)
-     print("category saved")
+        print("category saved")
                 
 
 def saveAllRestaurantsMenus(restaurant_id, restaurant):
