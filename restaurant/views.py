@@ -55,7 +55,7 @@ class CategoryView(View):
 
         except Restaurants_Categories.DoesNotExist:
             return JsonResponse({"RESULT" : "NO_RESTAURANT_CATEGORY"})
-        
+
         return JsonResponse({"restaurants" : restaurants_list, "restaurants_number" : len(restaurants_list)}, status=200)
 
 class RestaurantView(View):
@@ -85,6 +85,3 @@ class RestaurantView(View):
             for menu_category in menu_categories]
 
         return JsonResponse({"restaurant" : restaurant, "all_menus" : all_menus, "payment_methods" : paymentmethods})
-        
-
-         

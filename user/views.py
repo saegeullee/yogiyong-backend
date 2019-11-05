@@ -1,9 +1,10 @@
 import jwt
 import json
 import bcrypt
-from django.http  import JsonResponse
-from django.views import View
-from .models	  import User
+from django.http       import JsonResponse
+from django.views      import View
+from .models           import User
+from yogiyong.settings import SECRET_KEY
 
 class SignUpView(View):
     def post(self, request):
@@ -22,17 +23,19 @@ class SignUpView(View):
                     email = input_data['email'],
                     password = hashed_password.decode('utf-8'), #CharField이기 때문에 unicode로
                     nickname = input_data['nickname'],
-                    email_accept = input_data['email_accept'],
+                    notofocation_accept = input_data['notification_accept'],
                     #social_platform=,                    
                     ).save()
 			
                 return JsonResponse({'message':'SUCCESS'}, status=200)
+
         except KeyError:
             return JsonResponse({'message':'WRONG_KEY'}, status=400)
 
 class SignInView(View):
-    def get(self, request):
+    def post(self, request):
         input_data=json.loads(request.body)
+        print(input_data)
         try:	
         #기존 회원인지 확인
             if User.objects.filter(email=input_data['email']).exists():
@@ -40,13 +43,13 @@ class SignInView(View):
                 #패스워드 일치 확인
                 if bcrypt.checkpw(input_data['password'].encode('utf-8'), user_in_db.password.encode('utf-8')):
                     #토큰 발행
-                    token=jwt.encode({'id':user_in_db.id}, 'secret', algorithm='HS256')
+                    user_token=jwt.encode({'id':user_in_db.id}, SECRET_KEY, algorithm='HS256')
 			
                     return JsonResponse(
-                                        {
-                                            'message':'SUCCESS',
-                                            'token':  f'{token}'
-                                        },status=200
+                                    {
+                                        'message':'SUCCESS',
+                                        'user_token':  f'{user_token}'
+                                    },status=200
                                         )
                 #패스워드가 일치하지 않음
                 else:
@@ -55,10 +58,9 @@ class SignInView(View):
             else:
             #없는 유저이므로 401 Unauthorized
                 return JsonResponse({'message':'INVALID_USER'}, status=401)
+
         except KeyError:
-                
             return JsonResponse({'message':'WRONG_KEY'}, status=400)
 
         except User.DoesNotExist:
-                
             return JsonResponse({'message':'INVALID_USER'}, status=401)
