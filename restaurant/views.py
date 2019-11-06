@@ -18,8 +18,9 @@ class CategoryView(View):
         try:
             order_method = request.GET.get('order_method', 'id')
             pageNum = request.GET.get('pageNum', 0)
-
-            restaurants  = Restaurants_Categories.objects.filter(
+            
+            restaurants_count = Restaurants_Categories.objects.filter(category_id = category_id).count()
+            restaurants = Restaurants_Categories.objects.filter(
                 category_id = category_id).order_by(
                     f"-restaurant__{order_method}").select_related(
                     'restaurant').prefetch_related(
@@ -60,10 +61,16 @@ class CategoryView(View):
             if len(restaurants_list) == 0 :
                 return JsonResponse({"RESULT" : "NO_MORE_PAGE"}, status=200)
 
+            page = {
+                'current_page' : pageNum,
+                'per_page' : len(restaurants),
+                'total_count' : restaurants_count
+            }
+
         except Restaurants_Categories.DoesNotExist:
             return JsonResponse({"RESULT" : "NO_RESTAURANT_CATEGORY"}, status=400)
         
-        return JsonResponse({"restaurants" : restaurants_list, "restaurants_number" : len(restaurants_list)}, status=200)
+        return JsonResponse({"restaurants" : restaurants_list, "page" : page}, status=200)
 
 class RestaurantView(View):
 
@@ -103,6 +110,7 @@ class RestaurantsSearchView(View):
             if query == "":
                 return JsonResponse({"RESULT" : "INSERT_SEARCH_QUERY"}, status=200)
 
+            restaurants_count = Restaurants.objects.filter(name__icontains=query).count()
             restaurants = Restaurants.objects.filter(
                 name__icontains=query
                 )[0 + (int(pageNum) * 20) : ((int(pageNum) + 1)) * 20].values()
@@ -110,31 +118,15 @@ class RestaurantsSearchView(View):
             if len(restaurants) == 0:
                 return JsonResponse({"RESULT" : "RESTAURANT_DOES_NOT_EXIST"}, status=200)
 
-            return JsonResponse({"restaurants" : list(restaurants), "restaurants_number" : len(restaurants)}, status=200)
+            page = {
+                'current_page' : pageNum,
+                'per_page' : len(restaurants),
+                'total_count' : restaurants_count
+            }
+            return JsonResponse({"restaurants" : list(restaurants), "page" : page}, status=200)
         except Restaurants.DoesNotExist:
             return JsonResponse({"RESULT" : "RESTAURANT_DOES_NOT_EXIST"}, status=400)
 
-class RestaurantsNearByView(View):
-    
-    def get(self, request):
-        try:
-            lat = request.GET.get("lat", "")
-            lng = request.GET.get("lng", "")
-
-            restaurants = Restaurants.objects.filter(
-                Q(lat__range=((int(lat) - 1), (int(lat) + 1))) \
-                & Q(lng__range=((int(lng) - 1), (int(lng) + 1))))[:100].values()
-
-            if len(restaurants) == 0:
-                return JsonResponse({"RESULT" : "RESTAURANT_DOES_NOT_EXIST"}, status=200)
-
-            return JsonResponse({"restaurants" : list(restaurants), "restaurants_number" : len(restaurants)}, status=200)
-        except ValueError:
-            return JsonResponse({"RESULT" : "INVALID_LITERAL"}, status=400)
-        except Restaurants.DoesNotExist:
-            return JsonResponse({"RESULT" : "RESTAURANT_DOES_NOT_EXIST"}, status=400)
-            
-            
         
         
         
