@@ -1,10 +1,12 @@
 import jwt
 import json
 import bcrypt
+import requests
+from random            import randint
 from django.http       import JsonResponse
 from django.views      import View
-from .models           import User
-from yogiyong.settings import SECRET_KEY
+from .models           import User, AuthSms
+from yogiyong.settings import SECRET_KEY, SMS_ACCESS_KEY_ID, SMS_URL, SMS_SERVICE_SECRET, SMS_MY_PHONE_NUMBER
 
 class SignUpView(View):
     def post(self, request):
@@ -64,3 +66,46 @@ class SignInView(View):
 
         except User.DoesNotExist:
             return JsonResponse({'message':'INVALID_USER'}, status=401)
+
+class AuthSmsSendView(View):
+    #실제 문자를 보내주는 메서드
+    def send_sms(self, phone_number, auth_number):
+        headers = {
+            'Content-Type': 'application/json; charset=utf-8',
+            'x-ncp-auth-key': f'{SMS_ACCESS_KEY_ID}',
+            'x-ncp-service-secret':f'{SMS_SERVICE_SECRET}',
+        }
+
+        data = {
+            'type':'SMS',
+            'contentType':'COMM',
+            'countryCode':'82',
+            'from':f'{SMS_MY_PHONE_NUMBER}',
+            'to':[
+                f'{phone_number}',
+            ],
+            'content':f'요기용 인증번호 [{auth_number}]'
+        }
+        
+        requests.post(SMS_URL, headers=headers, json=data)
+
+    def post(self, request):
+        try:
+            input_data          = json.loads(request.body)
+            input_phone_number  = input_data['phone_number']
+            created_auth_number = randint(1000, 10000)
+            exist_phone_number             = AuthSms.objects.get(phone_number=input_phone_number)
+            exist_phone_number.auth_number = created_auth_number
+            exist_phone_number.save()
+            #sms 보내기
+            self.send_sms(phone_number = input_phone_number, auth_number = created_auth_number)
+            return JsonResponse({'message':'SUCCESS'}, status=200)
+
+        except AuthSms.DoesNotExist:
+            AuthSms.objects.create(
+                            phone_number = input_phone_number,
+                            auth_number  = created_auth_number
+                            ).save()
+            #sms 보내기
+            self.send_sms(phone_number = input_phone_number, auth_number = created_auth_number)
+            return JsonResponse({'message':'SUCCESS'}, status=200)

@@ -18,7 +18,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 #SECRET_KEY = 'i(d(w4ab_hxe2zvm383k61572=mlg&b^&_py%8%s)!ouaw3-0j'
 
 SECRET_KEY = my_settings.YOGIYONG_SECRET['secret']
-EXP_TIME = my_settings.YOGIYONG_SECRET['exp_time']
+EXP_TIME   = my_settings.YOGIYONG_SECRET['exp_time']
+
+SMS_SERVICE_ID      = my_settings.SIGN_UP_SMS['service_id']
+SMS_ACCESS_KEY_ID   = my_settings.SIGN_UP_SMS['access_key_id']
+SMS_URL             = my_settings.SIGN_UP_SMS['url']
+SMS_SERVICE_SECRET  = my_settings.SIGN_UP_SMS['service_secret']
+SMS_MY_PHONE_NUMBER = my_settings.SIGN_UP_SMS['my_phone_number']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
