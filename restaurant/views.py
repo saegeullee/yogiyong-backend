@@ -1,8 +1,11 @@
 import json
 
+from django.db.models import Q
 from django.http import JsonResponse
 from django.views import View
-from .models import Restaurants, Categories, Restaurants_Categories, Tags, PaymentMethods, Menus, MenuCategories, Restaurants_Tags
+from .models import Restaurants, Categories, Restaurants_Categories, Tags, \
+PaymentMethods, Menus, MenuCategories, Restaurants_Tags
+
 
 class HomeView(View): 
     def get(self, request): 
@@ -12,12 +15,12 @@ class HomeView(View):
 class CategoryView(View):
 
     def get(self, request, category_id):
-
         try:
             order_method = request.GET.get('order_method', 'id')
             pageNum = request.GET.get('pageNum', 0)
-
-            restaurants  = Restaurants_Categories.objects.filter(
+            
+            restaurants_count = Restaurants_Categories.objects.filter(category_id = category_id).count()
+            restaurants = Restaurants_Categories.objects.filter(
                 category_id = category_id).order_by(
                     f"-restaurant__{order_method}").select_related(
                     'restaurant').prefetch_related(
@@ -58,12 +61,19 @@ class CategoryView(View):
             if len(restaurants_list) == 0 :
                 return JsonResponse({"RESULT" : "NO_MORE_PAGE"}, status=200)
 
+            page = {
+                'current_page' : pageNum,
+                'per_page' : len(restaurants),
+                'total_count' : restaurants_count
+            }
+
         except Restaurants_Categories.DoesNotExist:
             return JsonResponse({"RESULT" : "NO_RESTAURANT_CATEGORY"}, status=400)
         
-        return JsonResponse({"restaurants" : restaurants_list, "restaurants_number" : len(restaurants_list)}, status=200)
+        return JsonResponse({"restaurants" : restaurants_list, "page" : page}, status=200)
 
 class RestaurantView(View):
+
     def get(self, request, restaurant_id):
         try:
             restaurant = Restaurants.objects.values().get(id=restaurant_id)
@@ -90,6 +100,35 @@ class RestaurantView(View):
             for menu_category in menu_categories]
 
         return JsonResponse({"restaurant" : restaurant, "all_menus" : all_menus, "payment_methods" : paymentmethods}, status=200)
+        
+class RestaurantsSearchView(View):
+
+    def get(self, request):
+        try:
+            query = request.GET.get("query", "")
+            pageNum = request.GET.get("pageNum", 0)
+            if query == "":
+                return JsonResponse({"RESULT" : "INSERT_SEARCH_QUERY"}, status=200)
+
+            restaurants_count = Restaurants.objects.filter(name__icontains=query).count()
+            restaurants = Restaurants.objects.filter(
+                name__icontains=query
+                )[0 + (int(pageNum) * 20) : ((int(pageNum) + 1)) * 20].values()
+
+            if len(restaurants) == 0:
+                return JsonResponse({"RESULT" : "RESTAURANT_DOES_NOT_EXIST"}, status=200)
+
+            page = {
+                'current_page' : pageNum,
+                'per_page' : len(restaurants),
+                'total_count' : restaurants_count
+            }
+            return JsonResponse({"restaurants" : list(restaurants), "page" : page}, status=200)
+        except Restaurants.DoesNotExist:
+            return JsonResponse({"RESULT" : "RESTAURANT_DOES_NOT_EXIST"}, status=400)
+
+        
+        
         
 
          
