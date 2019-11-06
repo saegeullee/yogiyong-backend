@@ -1,8 +1,11 @@
 import json
 
+from django.db.models import Q
 from django.http import JsonResponse
 from django.views import View
-from .models import Restaurants, Categories, Restaurants_Categories, Tags, PaymentMethods, Menus, MenuCategories, Restaurants_Tags
+from .models import Restaurants, Categories, Restaurants_Categories, Tags, \
+PaymentMethods, Menus, MenuCategories, Restaurants_Tags
+
 
 class HomeView(View): 
     def get(self, request): 
@@ -12,7 +15,6 @@ class HomeView(View):
 class CategoryView(View):
 
     def get(self, request, category_id):
-
         try:
             order_method = request.GET.get('order_method', 'id')
             pageNum = request.GET.get('pageNum', 0)
@@ -64,6 +66,7 @@ class CategoryView(View):
         return JsonResponse({"restaurants" : restaurants_list, "restaurants_number" : len(restaurants_list)}, status=200)
 
 class RestaurantView(View):
+
     def get(self, request, restaurant_id):
         try:
             restaurant = Restaurants.objects.values().get(id=restaurant_id)
@@ -90,6 +93,50 @@ class RestaurantView(View):
             for menu_category in menu_categories]
 
         return JsonResponse({"restaurant" : restaurant, "all_menus" : all_menus, "payment_methods" : paymentmethods}, status=200)
+        
+class RestaurantsSearchView(View):
+
+    def get(self, request):
+        try:
+            query = request.GET.get("query", "")
+            pageNum = request.GET.get("pageNum", 0)
+            if query == "":
+                return JsonResponse({"RESULT" : "INSERT_SEARCH_QUERY"}, status=200)
+
+            restaurants = Restaurants.objects.filter(
+                name__icontains=query
+                )[0 + (int(pageNum) * 20) : ((int(pageNum) + 1)) * 20].values()
+
+            if len(restaurants) == 0:
+                return JsonResponse({"RESULT" : "RESTAURANT_DOES_NOT_EXIST"}, status=200)
+
+            return JsonResponse({"restaurants" : list(restaurants), "restaurants_number" : len(restaurants)}, status=200)
+        except Restaurants.DoesNotExist:
+            return JsonResponse({"RESULT" : "RESTAURANT_DOES_NOT_EXIST"}, status=400)
+
+class RestaurantsNearByView(View):
+    
+    def get(self, request):
+        try:
+            lat = request.GET.get("lat", "")
+            lng = request.GET.get("lng", "")
+
+            restaurants = Restaurants.objects.filter(
+                Q(lat__range=((int(lat) - 1), (int(lat) + 1))) \
+                & Q(lng__range=((int(lng) - 1), (int(lng) + 1))))[:100].values()
+
+            if len(restaurants) == 0:
+                return JsonResponse({"RESULT" : "RESTAURANT_DOES_NOT_EXIST"}, status=200)
+
+            return JsonResponse({"restaurants" : list(restaurants), "restaurants_number" : len(restaurants)}, status=200)
+        except ValueError:
+            return JsonResponse({"RESULT" : "INVALID_LITERAL"}, status=400)
+        except Restaurants.DoesNotExist:
+            return JsonResponse({"RESULT" : "RESTAURANT_DOES_NOT_EXIST"}, status=400)
+            
+            
+        
+        
         
 
          
