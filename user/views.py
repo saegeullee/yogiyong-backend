@@ -12,6 +12,8 @@ class SignUpView(View):
     def post(self, request):
         input_data=json.loads(request.body)
         try:
+            #auth가 True일 때
+            #Phone_number도 저장ㅎ
             #존재하는 유저인지 체크
             if User.objects.filter(email=input_data['email']).exists():	
                 #이미 존재하는 유저이므로 409 conflict		
@@ -92,20 +94,17 @@ class AuthSmsSendView(View):
     def post(self, request):
         try:
             input_data          = json.loads(request.body)
-            input_phone_number  = input_data['phone_number']
             created_auth_number = randint(1000, 10000)
-            exist_phone_number             = AuthSms.objects.get(phone_number=input_phone_number)
-            exist_phone_number.auth_number = created_auth_number
-            exist_phone_number.save()
+            exist_phone_number  = AuthSms.objects.update_or_create(phone_number=input_data['phone_number'],defaults={'phone_number':input_data['phone_number'],'auth_number':created_auth_number})
             #sms 보내기
-            self.send_sms(phone_number = input_phone_number, auth_number = created_auth_number)
+            self.send_sms(phone_number = input_data['phone_number'], auth_number = created_auth_number)
             return JsonResponse({'message':'SUCCESS'}, status=200)
 
         except AuthSms.DoesNotExist:
-            AuthSms.objects.create(
-                            phone_number = input_phone_number,
-                            auth_number  = created_auth_number
-                            ).save()
+            AuthSms(
+                phone_number = input_phone_number,
+                auth_number  = created_auth_number
+                ).save()
             #sms 보내기
             self.send_sms(phone_number = input_phone_number, auth_number = created_auth_number)
             return JsonResponse({'message':'SUCCESS'}, status=200)
@@ -114,16 +113,15 @@ class AuthNumberConfirmView(View):
     def post(self, request):
         try:
             input_data         = json.loads(request.body)
-            input_phone_number = input_data['phone_number']
-            input_auth_number  = input_data['auth_number']
-            auth_record_in_db  = AuthSms.objects.get(phone_number=input_phone_number)
+            auth_record_in_db  = AuthSms.objects.get(phone_number=input_data['phone_number'])
             auth_number_in_db  = auth_record_in_db.auth_number
            
-            if auth_number_in_db == int(input_auth_number):
-                return JsonResponse({'message':'SUCCESS', 'auth':'True'}, status=200)
-            return JsonResponse({'message':'NOT_EXACT_VALUE', 'auth':'False'}, status=400)
+            if auth_number_in_db == int(input_data['auth_number']):
+                return JsonResponse({'message':'SUCCESS', 'phone_number':input_data['phone_number']}, status=200)
+            return JsonResponse({'message':'NOT_EXACT_VALUE', 'auth':False}, status=400)
 
         except KeyError:
-            return JsonResponse({'message':'WRONG_KEY', 'auth':'False'}, status=400)
+            return JsonResponse({'message':'WRONG_KEY', 'auth':False}, status=400)
+
         except AuthSms.DoesNotExist:
-            return JsonResponse({'message':'NO_AUTHENTICATION_REQUEST', 'auth':'False'}, status=401)
+            return JsonResponse({'message':'NO_AUTHENTICATION_REQUEST', 'auth':False}, status=401)
