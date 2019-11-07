@@ -11,7 +11,8 @@ class User(models.Model):
     password               = models.CharField(max_length=400)
     notification_accept    = models.BooleanField(default=False)
     nickname               = models.CharField(max_length=50, blank=True)
-    social_platform        = models.ForeignKey(SocialPlatform, on_delete=models.SET_NULL, null=True)
+    phone_number           = models.CharField(max_length=11, null=True)
+    #social_platform        = models.ForeignKey(SocialPlatform, on_delete=models.SET_NULL, null=True)
 
     class Meta:
         db_table = 'users'
