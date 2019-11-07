@@ -15,3 +15,9 @@ class User(models.Model):
 
     class Meta:
         db_table = 'users'
+
+class AuthSms(models.Model):
+    phone_number = models.CharField(max_length=11, primary_key=True)
+    auth_number  = models.IntegerField()
+    class Meta:
+        db_table = 'auth_numbers'
