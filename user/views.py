@@ -95,19 +95,14 @@ class AuthSmsSendView(View):
         try:
             input_data          = json.loads(request.body)
             created_auth_number = randint(1000, 10000)
-            exist_phone_number  = AuthSms.objects.update_or_create(phone_number=input_data['phone_number'],defaults={'phone_number':input_data['phone_number'],'auth_number':created_auth_number})
+            AuthSms.objects.update_or_create(phone_number=input_data['phone_number'],defaults={'phone_number':input_data['phone_number'],'auth_number':created_auth_number})
             #sms 보내기
             self.send_sms(phone_number = input_data['phone_number'], auth_number = created_auth_number)
+
             return JsonResponse({'message':'SUCCESS'}, status=200)
 
-        except AuthSms.DoesNotExist:
-            AuthSms(
-                phone_number = input_phone_number,
-                auth_number  = created_auth_number
-                ).save()
-            #sms 보내기
-            self.send_sms(phone_number = input_phone_number, auth_number = created_auth_number)
-            return JsonResponse({'message':'SUCCESS'}, status=200)
+        except KeyError:
+            return JsonResponse({'message':'WRONG_KEY'}, status=400)
 
 class AuthNumberConfirmView(View):
     def post(self, request):
