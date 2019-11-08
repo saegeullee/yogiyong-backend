@@ -36,7 +36,6 @@ class OrderLoginConfirm:
 
     def __call__(self, request, *args, **kwargs):
         token      = request.headers.get("Authorization", None)
-        print(token)
         try:
             if token:
                 token_payload = jwt.decode(token.encode('utf-8'), SECRET_KEY, algorithms=['HS256'])
