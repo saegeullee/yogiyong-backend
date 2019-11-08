@@ -2,11 +2,16 @@ import jwt
 import json
 import bcrypt
 import requests
+
+from datetime          import datetime, timedelta, timezone
 from random            import randint
 from django.http       import JsonResponse
 from django.views      import View
 from .models           import User, AuthSms
 from yogiyong.settings import SECRET_KEY, SMS_ACCESS_KEY_ID, SMS_URL, SMS_SERVICE_SECRET, SMS_MY_PHONE_NUMBER
+from utils             import LoginConfirm
+from order.models      import Order, JoinOrderMenu
+from restaurant.models import Restaurants, Menus
 
 class SignUpView(View):
     def post(self, request):
@@ -43,7 +48,7 @@ class SignInView(View):
                 #패스워드 일치 확인
                 if bcrypt.checkpw(input_data['password'].encode('utf-8'), user_in_db.password.encode('utf-8')):
                     #토큰 발행
-                    user_token=jwt.encode({'id':user_in_db.id}, SECRET_KEY, algorithm='HS256')
+                    user_token=jwt.encode({'id':user_in_db.id}, SECRET_KEY, algorithm='HS256').decode('utf-8')
 			
                     return JsonResponse(
                                     {
@@ -114,3 +119,27 @@ class AuthNumberConfirmView(View):
 
         except AuthSms.DoesNotExist:
             return JsonResponse({'message':'NEED_AUTHENTICATION_REQUEST', 'auth':False}, status=401)
+
+class UserOrderHistoryView(View):
+    @LoginConfirm
+    def get(self, request):
+        order_history_of_user = list(Order.objects.filter(user_id=request.user.id).order_by('-id').values())
+        KST = timezone(timedelta(hours=9))
+        for order in order_history_of_user:
+            order_time_kst             = order['created_at'].replace(tzinfo=KST)
+            order_time_kst             = order_time_kst + timedelta(hours=9)
+            order['created_at']        = order_time_kst
+
+            order['restuarant_name']   = Restaurants.objects.get(id=order['restaurant_id']).name
+            
+            menu_amount_infos_of_order = list(JoinOrderMenu.objects.filter(order_id=order['id']).values())
+            order['menus'] = list()
+            for menu in menu_amount_infos_of_order:
+                menu_info           = dict()
+                menu_instance       = Menus.objects.get(id=menu['menu_id'])
+                menu_info['name']   = menu_instance.name
+                menu_info['price']  = menu_instance.price
+                menu_info['id']     = menu['menu_id']
+                menu_info['amount'] = menu['amount']
+                order['menus'].append(menu_info)
+        return JsonResponse(order_history_of_user, status=200, safe=False)

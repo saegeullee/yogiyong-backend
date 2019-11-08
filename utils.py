@@ -24,9 +24,6 @@ class LoginConfirm:
         except jwt.ExpiredSignatureError:
             return JsonResponse({'message':'EXPIRED_TOKEN'}, status=401)
 
-        except jwt.InvalidIssuerError:
-            return JsonResponse({'message':'INVALID_USER'}, status=401)
-
         except jwt.DecodeError:
             return JsonResponse({'message':'INVALID_USER'}, status=401)
 
@@ -39,23 +36,20 @@ class OrderLoginConfirm:
 
     def __call__(self, request, *args, **kwargs):
         token      = request.headers.get("Authorization", None)
-        secret_key = SECRET_KEY
+        print(token)
         try:
             if token:
-                token_payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+                token_payload = jwt.decode(token.encode('utf-8'), SECRET_KEY, algorithms=['HS256'])
                 user_id       = token_payload['id']
                 user          = User.objects.get(id=user_id)
                 request.user  = user
-                return self.orginal_function(self, request, *args, **kwargs)
+                return self.original_function(self, request, *args, **kwargs)
 
             request.user = None
             return self.original_function(self, request, *args, **kwargs)
 
         except jwt.ExpiredSignatureError:
             return JsonResponse({'message':'EXPIRED_TOKEN'}, status=401)
-
-        except jwt.InvalidIssuerError:
-            return JsonResponse({'message':'INVALID_USER'}, status=401)
 
         except jwt.DecodeError:
             return JsonResponse({'message':'INVALID_USER'}, status=401)
