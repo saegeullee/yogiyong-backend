@@ -1,5 +1,6 @@
 import jwt
 import json
+import requests
 
 from django.http  import JsonResponse
 from django.views import View
@@ -9,6 +10,26 @@ from user.models       import User
 from .models           import Order, JoinOrderMenu
 from restaurant.models import Restaurants, Menus, PaymentMethods
 from utils             import OrderLoginConfirm
+from yogiyong.settings import SECRET_KEY, SMS_ACCESS_KEY_ID, SMS_URL, SMS_SERVICE_SECRET, SMS_MY_PHONE_NUMBER
+def send_sms(phone_number):
+    headers = {
+                'Content-Type': 'application/json; charset=utf-8',
+                'x-ncp-auth-key': f'{SMS_ACCESS_KEY_ID}',
+                'x-ncp-service-secret':f'{SMS_SERVICE_SECRET}',
+    }
+
+    data = {
+        'type':'SMS',
+        'contentType':'COMM',
+        'countryCode':'82',
+        'from':f'{SMS_MY_PHONE_NUMBER}',
+        'to':[
+            f'{phone_number}',
+            ],
+        'content':f'요기용 주문이 완료되었습니다.'
+    }
+        
+    requests.post(SMS_URL, headers=headers, json=data)
 
 class OrderView(View):
     @OrderLoginConfirm
@@ -43,6 +64,8 @@ class OrderView(View):
                                                 ))
             JoinOrderMenu.objects.bulk_create(join_order_menu)
 
+            send_sms(phone_number = order_data['user_phone_number'])
+            
             return JsonResponse({'message':'SUCCESS'}, status=200)
                     
         except Restaurants.DoesNotExist:
