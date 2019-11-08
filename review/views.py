@@ -8,10 +8,9 @@ from datetime     import datetime,timedelta,timezone
 from user.models       import User
 from review.models     import Review, JoinReviewMenu, ReviewImage
 from restaurant.models import Restaurants, Menus
-from order.models      import Order
+from order.models      import Order, JoinOrderMenu
 from utils             import LoginConfirm
 
-#사용자가 리뷰를 남기면 DB에 저장
 class ReviewRegisterView(View):
     @LoginConfirm
     def post(self, request, restaurant_id):
@@ -44,7 +43,7 @@ class ReviewRegisterView(View):
             rating_avg      = sum(rating.values()) / len(rating),
             created_at      = request_time,
             ).save()
-        #방금 등록한 리뷰를 변수에 저장
+        
         saved_review = Review.objects.latest('created_at')
         #menu와 review 연결
         join_review_menu_list = []
@@ -70,7 +69,24 @@ class ReviewRegisterView(View):
 #DB에 저장되어 있는 리뷰들을 보내주는 view
 class ReviewView(View):
     def get(self, request, restaurant_id):
-        requested_restaurant    = Restaurants.objects.get(id=restaurant_id)
-        review_about_restaurant = list(Review.objects.filter(restaurant = requested_restaurant).order_by('-id').values())
+        try:
+            requested_restaurant     = Restaurants.objects.get(id=restaurant_id)
+            reviews_about_restaurant = list(Review.objects.filter(restaurant = requested_restaurant).order_by('-id').values())
+            
+            if len(reviews_about_restaurant) == 0:
+                return JsonResponse(reviews_about_restaurant, status=200, safe=False)
 
-        return JsonResponse(review_about_restaurant, status=200, safe=False)
+            for i in range(len(reviews_about_restaurant)):
+                reviews_about_restaurant[i]['menus'] = list()
+                menus_info_of_order                  = list(JoinOrderMenu.objects.filter(order_id = reviews_about_restaurant[i]['order_id']).values())
+                for menu in menus_info_of_order:
+                    menu_dict           = dict()
+                    menu_dict['id']     = menu['menu_id']
+                    menu_dict['name']   = Menus.objects.get(id=menu['menu_id']).name
+                    menu_dict['amount'] = menu['amount']
+                    reviews_about_restaurant[i]['menus'].append(menu_dict)
+                    
+            return JsonResponse(reviews_about_restaurant, status=200, safe=False)
+
+        except Restaurants.DoesNotExist:
+            return JsonResponse({'message':'RESTAURANT_NOT_EXIST'}, status=400)

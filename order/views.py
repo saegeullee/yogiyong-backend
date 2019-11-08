@@ -18,7 +18,7 @@ class OrderView(View):
             now_datetime         = datetime.now(timezone.utc) #DB에 저장할 때는 국제표준으로 저장
             order_user           = request.user
             order_restaurant     = Restaurants.objects.get(id=order_data['restaurant']['id'])
-            order_payment_method = PaymentMethods.objects.get(id=order_data['payment_method']['id'])
+            order_payment_method = PaymentMethods.objects.get(name=order_data['payment_method'], restaurant_id=order_data['restaurant']['id'])
            
             Order(
                 user              = order_user,
