@@ -17,6 +17,6 @@ from django.urls import path
 from .views      import ReviewView, ReviewRegisterView
 
 urlpatterns = [
-    path('/view/<int:restaurant_id>', ReviewView.as_view()),
-    path('/register/<int:restaurant_id>', ReviewRegisterView.as_view()),
+    path('/<int:restaurant_id>', ReviewView.as_view()),
+    path('/<int:restaurant_id>', ReviewView.as_view())
 ]

@@ -15,12 +15,15 @@ class Review(models.Model):
     created_at      = models.DateTimeField(auto_now_add=True)
     updated_at      = models.DateTimeField(auto_now=True, null=True)
     menus           = models.ManyToManyField(Menus, through='JoinReviewMenu')
+    images          = models.ForeignKey(ReviewImage)
+
     class Meta:
         db_table = 'reviews'
 
 class ReviewImage(models.Model):
     review       = models.ForeignKey(Review, on_delete=models.CASCADE)
     review_image = models.CharField(max_length=4000)
+
     class Meta:
         db_table = 'review_images'
 
@@ -28,5 +31,6 @@ class JoinReviewMenu(models.Model):
     review = models.ForeignKey(Review, on_delete=models.CASCADE)
     menu   = models.ForeignKey(Menus, on_delete=models.CASCADE)
     amount = models.IntegerField()
+
     class Meta:
         db_table = 'join_review_menu'

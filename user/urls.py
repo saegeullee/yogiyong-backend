@@ -19,7 +19,6 @@ from .views import SignUpView, SignInView, AuthSmsSendView, AuthNumberConfirmVie
 urlpatterns = [
     path('/signup', SignUpView.as_view()),
     path('/signin', SignInView.as_view()),
-    path('/auth/send', AuthSmsSendView.as_view()),
-    path('/auth/confirm', AuthNumberConfirmView.as_view()),
+    path('/auth-code', AuthSmsSendView.as_view()),
     path('/order-history', UserOrderHistoryView.as_view()),
 ]

@@ -12,6 +12,7 @@ class Order(models.Model):
     payment_method    = models.ForeignKey(PaymentMethods, on_delete=models.CASCADE)
     created_at        = models.DateTimeField(editable=False)
     menus             = models.ManyToManyField(Menus, through='JoinOrderMenu')
+
     class Meta:
         db_table = 'orders'
 

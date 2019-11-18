@@ -25,41 +25,42 @@ class Restaurants(models.Model):
     ingredients_origin          = models.TextField(null=True)
     company_name                = models.CharField(max_length=500, null=True)
     company_number              = models.CharField(max_length=50, null=True)
-    
+    payment_methods             = modesl.ForeignKey(PaymentMethods) 
+
     class Meta:
         db_table = "restaurants"
 
 class Tags(models.Model):
-    name            = models.CharField(max_length=100, blank=True)
-    restaurant      = models.ManyToManyField(Restaurants, through='Restaurants_Tags')
+    name       = models.CharField(max_length = 100, blank = True)
+    restaurant = models.ManyToManyField(Restaurants, through = 'RestaurantsTags')
 
     class Meta:
         db_table = "tags"
 
-class Restaurants_Tags(models.Model):
-    restaurant = models.ForeignKey(Restaurants, on_delete=models.SET_NULL, null=True)
-    tag = models.ForeignKey(Tags, on_delete=models.SET_NULL, null=True)
+class RestaurantsTags(models.Model):
+    restaurant = models.ForeignKey(Restaurants, on_delete = models.SET_NULL, null = True)
+    tag        = models.ForeignKey(Tags, on_delete        = models.SET_NULL, null = True)
 
     class Meta:
         db_table = "restaurants_tags"
 
 class PaymentMethods(models.Model):
-    name            = models.CharField(max_length=100)
-    restaurant      = models.ForeignKey(Restaurants, on_delete=models.CASCADE)
+    name       = models.CharField(max_length              = 100)
+    restaurant = models.ForeignKey(Restaurants, on_delete = models.CASCADE)
 
     class Meta:
         db_table = "payment_methods"
 
 class Categories(models.Model):
-    name             = models.CharField(max_length=50)
-    restaurant       = models.ManyToManyField(Restaurants, through='Restaurants_Categories')
+    name       = models.CharField(max_length = 50)
+    restaurant = models.ManyToManyField(Restaurants, through = 'Restaurants_Categories')
 
     class Meta:
         db_table = "categories"
 
-class Restaurants_Categories(models.Model):
-    restaurant = models.ForeignKey(Restaurants, on_delete=models.SET_NULL, null=True)
-    category = models.ForeignKey(Categories, on_delete=models.SET_NULL, null=True)
+class RestaurantsCategories(models.Model):
+    restaurant = models.ForeignKey(Restaurants, on_delete = models.SET_NULL, null = True)
+    category   = models.ForeignKey(Categories, on_delete  = models.SET_NULL, null = True)
 
     class Meta:
         db_table = "restaurants_categories"
@@ -69,16 +70,16 @@ class MenuCategories(models.Model):
     name                = models.CharField(max_length=100)
 
     class Meta:
-        db_table="menucategories"
+        db_table="menu_categories"
 
 class Menus(models.Model):
-    restaurant          = models.ForeignKey(Restaurants, on_delete=models.SET_NULL, null=True)
-    menu_category       = models.ForeignKey(MenuCategories, on_delete=models.SET_NULL, null=True)
-    name                = models.CharField(max_length=500)
-    description         = models.CharField(max_length=3000)
-    price               = models.DecimalField(max_digits=9, decimal_places=2)
-    quantity            = models.IntegerField()
-    image               = models.URLField(max_length=4000, null=True)
+    restaurant    = models.ForeignKey(Restaurants, on_delete    = models.SET_NULL, null = True)
+    menu_category = models.ForeignKey(MenuCategories, on_delete = models.SET_NULL, null = True)
+    name          = models.CharField(max_length     = 500)
+    description   = models.CharField(max_length     = 3000)
+    price         = models.DecimalField(max_digits  = 9, decimal_places = 2)
+    quantity      = models.IntegerField()
+    image         = models.URLField(max_length      = 4000, null = True)
 
     class Meta:
         db_table="menus"

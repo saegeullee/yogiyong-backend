@@ -10,26 +10,31 @@ from user.models       import User
 from .models           import Order, JoinOrderMenu
 from restaurant.models import Restaurants, Menus, PaymentMethods
 from utils             import OrderLoginConfirm
-from yogiyong.settings import SECRET_KEY, SMS_ACCESS_KEY_ID, SMS_URL, SMS_SERVICE_SECRET, SMS_MY_PHONE_NUMBER
-def send_sms(phone_number):
+from yogiyong.settings import (
+    SECRET_KEY,
+    SMS_ACCESS_KEY_ID,
+    SMS_URL,
+    SMS_SERVICE_SECRET,
+    SMS_MY_PHONE_NUMBER
+)
+
+def send_sms(phone_number, content):
     headers = {
-                'Content-Type': 'application/json; charset=utf-8',
-                'x-ncp-auth-key': f'{SMS_ACCESS_KEY_ID}',
-                'x-ncp-service-secret':f'{SMS_SERVICE_SECRET}',
+        'Content-Type'         : 'application/json; charset=utf-8',
+        'x-ncp-auth-key'       : SMS_ACCESS_KEY_ID,
+        'x-ncp-service-secret' : SMS_SERVICE_SECRET,
     }
 
     data = {
-        'type':'SMS',
-        'contentType':'COMM',
-        'countryCode':'82',
-        'from':f'{SMS_MY_PHONE_NUMBER}',
-        'to':[
-            f'{phone_number}',
-            ],
-        'content':f'요기용 주문이 완료되었습니다.'
+        'type'        : 'SMS',
+        'contentType' : 'COMM',
+        'countryCode' : '82',
+        'from'        : SMS_MY_PHONE_NUMBER,
+        'to'          : [phone_number],
+        'content'     : conent
     }
         
-    requests.post(SMS_URL, headers=headers, json=data)
+    return requests.post(SMS_URL, headers=headers, json=data)
 
 class OrderView(View):
     @OrderLoginConfirm

@@ -17,8 +17,10 @@ class User(models.Model):
     class Meta:
         db_table = 'users'
 
-class AuthSms(models.Model):
-    phone_number = models.CharField(max_length=11, primary_key=True)
+class AuthCode(models.Model):
+    phone_number = models.CharField(max_length=11)
     auth_number  = models.IntegerField()
+    created_at   = models.DateTimeField()
+
     class Meta:
         db_table = 'auth_numbers'
