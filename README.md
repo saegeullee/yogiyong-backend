@@ -1,6 +1,6 @@
 ## Ovierview
-온라인 음식 배달 서비스 요기요 Clone Project
-team : 백엔드 개발자 2명 (이새글, 박준규)
+온라인 음식 배달 서비스 요기요 Clone Project<br>
+TEAM : 백엔드 개발자 2명 (이새글, 박준규)<br>
 개발 기간 : 19.10.28 ~ 19.11.8
 
 ## Skills
